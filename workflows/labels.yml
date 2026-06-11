@@ -1,0 +1,73 @@
+name: Update repository labels
+
+on:
+  push:
+    branches:
+    - main
+    paths:
+    - '.github/workflows/labels.yml'
+  workflow_dispatch:
+jobs:
+  create-labels:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    env:
+      LABELS_JSON: |
+        [
+          {"name": "priority: critical"},
+          {"name": "priority: high"},
+          {"name": "priority: low"},
+          {"name": "priority: medium"},
+          {"name": "priority: minimal"},
+          {"name": "reason: duplicate"},
+          {"name": "reason: intentional"},
+          {"name": "reason: invalid"},
+          {"name": "requires: answers"},
+          {"name": "requires: discussion"},
+          {"name": "requires: feedback"},
+          {"name": "requires: fix"},
+          {"name": "requires: reproduction"},
+          {"name": "status: approved"},
+          {"name": "status: ongoing"},
+          {"name": "status: paused"},
+          {"name": "status: rejected"},
+          {"name": "status: review"},
+          {"name": "subtype: deprecate"},
+          {"name": "subtype: enhance"},
+          {"name": "subtype: new"},
+          {"name": "subtype: refactor"},
+          {"name": "subtype: remove"},
+          {"name": "theme: build"},
+          {"name": "theme: ci"},
+          {"name": "theme: git"},
+          {"name": "theme: src"},
+          {"name": "theme: tests"},
+          {"name": "type: bug"},
+          {"name": "type: documentation"},
+          {"name": "type: feature"}
+        ]
+    steps:
+    - uses: actions/github-script@v7
+      with:
+        script: |
+          const labels = JSON.parse(process.env.LABELS_JSON);
+          for (const label of labels) {
+            try {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: label.name,
+                description: label.description || '',
+                color: label.color || 'ffffff'
+              });
+            } catch (error) {
+              // Check if the error is because the label already exists
+              if (error.status === 422) {
+                console.log(`Label '${label.name}' already exists. Skipping.`);
+              } else {
+                // Log other errors
+                console.error(`Error creating label '${label.name}': ${error}`);
+              }
+            }
+          }
