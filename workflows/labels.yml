@@ -6,7 +6,7 @@ on:
     - main
     paths:
     - '.github/workflows/labels.yml'
-
+  workflow_dispatch:
 jobs:
   create-labels:
     runs-on: ubuntu-latest
